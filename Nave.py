@@ -12,6 +12,7 @@ class BrowserTab(QWebEngineView):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+        self.is_night_mode = True  # Inicialmente, começando no modo noturno
         self.setupUI()
 
     def setupUI(self):
@@ -21,6 +22,8 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
         self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_current_tab)
+        self.tabs.currentChanged.connect(self.current_tab_changed)
         self.tabs.setStyleSheet("QTabWidget::pane { border: 0; } QTabBar::tab { background: #444; color: #DDD; }")
         self.setCentralWidget(self.tabs)
 
@@ -40,11 +43,6 @@ class MainWindow(QMainWindow):
         self.url_bar.returnPressed.connect(self.navigate_to_url)
         navbar.addWidget(self.url_bar)
 
-        # Barra de status com estilo Dark Mode
-        self.status = QStatusBar()
-        self.status.setStyleSheet("background-color: #222; color: #DDD;")
-        self.setStatusBar(self.status)
-
         # Botão de Favoritos
         bookmarks_btn = QAction('Favoritos', self)
         bookmarks_btn.triggered.connect(self.show_bookmarks)
@@ -54,6 +52,21 @@ class MainWindow(QMainWindow):
         fullscreen_btn = QAction('Tela Cheia', self)
         fullscreen_btn.triggered.connect(self.toggle_fullscreen)
         navbar.addAction(fullscreen_btn)
+
+        # Botão de Histórico
+        history_btn = QAction('Histórico', self)
+        history_btn.triggered.connect(self.show_history)
+        navbar.addAction(history_btn)
+
+        # Botão de Downloads
+        downloads_btn = QAction('Downloads', self)
+        downloads_btn.triggered.connect(self.show_downloads)
+        navbar.addAction(downloads_btn)
+
+        # Botão de Modo Noturno e Diurno
+        night_mode_btn = QAction('Alternar Modo', self)
+        night_mode_btn.triggered.connect(self.toggle_night_mode)
+        navbar.addAction(night_mode_btn)
 
         # Primeira aba
         self.add_new_tab(QUrl('http://www.google.com'), 'Página Inicial')
@@ -68,6 +81,8 @@ class MainWindow(QMainWindow):
 
     def navigate_to_url(self):
         url = self.url_bar.text()
+        if not url.startswith("http"):
+            url = "http://" + url
         self.tabs.currentWidget().setUrl(QUrl(url))
 
     def update_url(self, q, browser=None):
@@ -78,11 +93,32 @@ class MainWindow(QMainWindow):
         # Implementar visualização e gerenciamento de favoritos
         print("Exibindo favoritos")
 
+    def show_history(self):
+        # Implementar visualização do histórico de navegação
+        print("Exibindo histórico")
+
+    def show_downloads(self):
+        # Implementar visualização dos downloads
+        print("Exibindo downloads")
+
     def toggle_fullscreen(self):
         if self.isFullScreen():
             self.showNormal()
         else:
             self.showFullScreen()
+
+    def toggle_night_mode(self):
+        # Alternar entre modo noturno e modo diurno
+        if self.is_night_mode:
+            self.setStyleSheet("background-color: #FFF; color: #000;")
+            self.url_bar.setStyleSheet("background-color: #EEE; color: #000;")
+            self.tabs.setStyleSheet("QTabWidget::pane { border: 0; } QTabBar::tab { background: #DDD; color: #000; }")
+            self.is_night_mode = False
+        else:
+            self.setStyleSheet("background-color: #333; color: #DDD;")
+            self.url_bar.setStyleSheet("background-color: #555; color: #DDD;")
+            self.tabs.setStyleSheet("QTabWidget::pane { border: 0; } QTabBar::tab { background: #444; color: #DDD; }")
+            self.is_night_mode = True
 
     def current_tab_changed(self, i):
         if i >= 0 and self.tabs.count() > 0:
@@ -94,10 +130,11 @@ class MainWindow(QMainWindow):
             return
         self.tabs.removeTab(i)
 
-# Aplicação principal
-app = QApplication(sys.argv)
-app.setAttribute(Qt.AA_EnableHighDpiScaling)  # Habilita a escala de alta DPI se necessário
-QApplication.setApplicationName('Navegador MK')
-window = MainWindow()
-window.show()
-app.exec_()
+# Configuração principal e criação do aplicativo
+if __name__ == '__main__':
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)  # Habilita a escala de alta DPI se necessário
+    app = QApplication(sys.argv)
+    QApplication.setApplicationName('Navegador MK')
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
